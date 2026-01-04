@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [loadingDesc, setLoadingDesc] = useState('');
-  
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [results, setResults] = useState<OverallFeedback | null>(null);
   const [currentConfig, setCurrentConfig] = useState<InterviewConfig | null>(null);
@@ -62,7 +62,7 @@ const App: React.FC = () => {
     setLoadingDesc('Our AI is tailoring high-impact questions to challenge your specific role and seniority level...');
     setCurrentConfig(config);
     setUserAnswers({});
-    
+
     try {
       const qs = await generateQuestions(config);
       setQuestions(qs);
@@ -80,7 +80,7 @@ const App: React.FC = () => {
     setLoading(true);
     setLoadingMsg('Analyzing Performance');
     setLoadingDesc('Our AI is reviewing your responses, identifying key strengths, and pinpointing areas for professional growth...');
-    
+
     // Calculate duration
     let durationStr = "N/A";
     if (startTime) {
@@ -135,28 +135,29 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen relative bg-[#121212] overflow-x-hidden">
       <Header score={results?.score} />
-      
+
       <main className="transition-all duration-500 pt-16">
         {appState === AppState.LANDING && (
           <LandingPage onGenerate={handleGenerate} />
         )}
 
         {appState === AppState.INTERVIEW && (
-          <QuestionPage 
-            questions={questions} 
-            onFinish={handleFinishInterview} 
+          <QuestionPage
+            questions={questions}
+            onFinish={handleFinishInterview}
             userAnswers={userAnswers}
             setUserAnswers={setUserAnswers}
             isReviewMode={results !== null}
             onBackToResults={() => setAppState(AppState.RESULTS)}
             startTime={startTime}
+            onExit={configureNewInterview}
           />
         )}
 
         {appState === AppState.RESULTS && results && (
-          <ResultSummary 
-            results={results} 
-            onRestart={retryCurrentQuestions} 
+          <ResultSummary
+            results={results}
+            onRestart={retryCurrentQuestions}
             onBack={configureNewInterview}
             onReviewDetails={goToReview}
           />

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Question } from '../types';
 import { getSingleFeedback } from '../services/geminiService';
 
@@ -11,20 +11,23 @@ interface QuestionPageProps {
   isReviewMode: boolean;
   onBackToResults: () => void;
   startTime: number | null;
+  onExit: () => void;
 }
 
-const QuestionPage: React.FC<QuestionPageProps> = ({ 
-  questions, 
-  onFinish, 
-  userAnswers, 
-  setUserAnswers, 
+const QuestionPage: React.FC<QuestionPageProps> = ({
+  questions,
+  onFinish,
+  userAnswers,
+  setUserAnswers,
   isReviewMode,
   onBackToResults,
-  startTime
+  startTime,
+  onExit
 }) => {
   const [loadingFeedback, setLoadingFeedback] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState("0:00");
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   useEffect(() => {
     if (!startTime || isReviewMode) return;
@@ -86,7 +89,7 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
     <div className="w-full lg:w-[70%] max-w-[1400px] mx-auto px-4 py-8 pb-32">
       {isReviewMode && (
         <div className="mb-8">
-          <button 
+          <button
             onClick={onBackToResults}
             className="flex items-center gap-2 text-blue-400 font-bold text-lg hover:text-blue-300 transition-colors group active:scale-95"
           >
@@ -115,7 +118,7 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
           </div>
         </div>
         <div className="w-full md:w-1/3 h-2 bg-gray-900 rounded-full overflow-hidden border border-white/5">
-          <div 
+          <div
             className="h-full bg-blue-600 transition-all duration-700 ease-out shadow-[0_0_15px_rgba(37,99,235,0.4)]"
             style={{ width: `${(answeredCount / questions.length) * 100}%` }}
           />
@@ -139,20 +142,18 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
 
               <div className="relative group">
                 <textarea
-                  className={`w-full bg-[#121212] border rounded-2xl p-5 min-h-[160px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-lg text-white placeholder-gray-700 resize-none leading-relaxed ${
-                    (userAnswers[q.id]?.answer?.trim().length || 0) > 0 ? 'border-blue-500/30' : 'border-white/10'
-                  } ${isReviewMode ? 'opacity-80 cursor-default' : ''}`}
+                  className={`w-full bg-[#121212] border rounded-2xl p-5 min-h-[160px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-lg text-white placeholder-gray-700 resize-none leading-relaxed ${(userAnswers[q.id]?.answer?.trim().length || 0) > 0 ? 'border-blue-500/30' : 'border-white/10'
+                    } ${isReviewMode ? 'opacity-80 cursor-default' : ''}`}
                   placeholder={isReviewMode ? "No response provided" : "Type your answer here..."}
                   readOnly={isReviewMode}
                   value={userAnswers[q.id]?.answer || ''}
                   onChange={(e) => handleAnswerChange(q.id, e.target.value)}
                 />
-                
+
                 <div className="absolute -bottom-1 left-0 w-full h-1 bg-gray-900 rounded-b-2xl overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-300 ${
-                      (userAnswers[q.id]?.answer?.length || 0) > 450 ? 'bg-amber-500' : 'bg-blue-500/50'
-                    }`}
+                  <div
+                    className={`h-full transition-all duration-300 ${(userAnswers[q.id]?.answer?.length || 0) > 450 ? 'bg-amber-500' : 'bg-blue-500/50'
+                      }`}
                     style={{ width: `${((userAnswers[q.id]?.answer?.length || 0) / 500) * 100}%` }}
                   />
                 </div>
@@ -187,7 +188,7 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
                     )}
                   </button>
                 </div>
-                
+
                 <div className="text-xs font-mono text-gray-600 uppercase tracking-tighter">
                   {userAnswers[q.id]?.answer?.length || 0} / 500 Chars
                 </div>
@@ -201,13 +202,12 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
                       <span className="w-1 h-1 bg-green-500 rounded-full"></span>
                       Model Answer Reference
                     </p>
-                    <button 
+                    <button
                       onClick={() => copyToClipboard(q.id, q.modelAnswer)}
-                      className={`p-2 rounded-lg transition-all flex items-center gap-2 text-xs font-bold active:scale-90 border ${
-                        copiedId === q.id 
-                          ? 'bg-green-600 text-white border-green-500' 
-                          : 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'
-                      }`}
+                      className={`p-2 rounded-lg transition-all flex items-center gap-2 text-xs font-bold active:scale-90 border ${copiedId === q.id
+                        ? 'bg-green-600 text-white border-green-500'
+                        : 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'
+                        }`}
                       title="Copy Answer"
                     >
                       {copiedId === q.id ? (
@@ -246,7 +246,17 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
         ))}
 
         {!isReviewMode && (
-          <div className="mt-8 flex flex-col items-center">
+          <div className="mt-8 flex flex-col md:flex-row items-center gap-4">
+            <button
+              onClick={() => setShowExitConfirm(true)}
+              className="w-full md:w-auto px-8 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-black py-5 rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-lg uppercase tracking-widest group whitespace-nowrap"
+            >
+              <svg className="w-6 h-6 rotate-180 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+              Exit
+            </button>
+
             <button
               onClick={() => {
                 const finalAnswers: Record<string, string> = {};
@@ -266,6 +276,41 @@ const QuestionPage: React.FC<QuestionPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 bg-[#0a0a0a]/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#1e1e1e] border border-white/10 p-8 rounded-3xl max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+
+              <h3 className="text-2xl font-bold text-white">End Interview?</h3>
+              <p className="text-gray-400">
+                Are you sure you want to exit? Your progress for this session will be lost.
+              </p>
+
+              <div className="flex gap-3 w-full mt-4">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="flex-1 px-6 py-3.5 rounded-xl text-white font-bold bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onExit}
+                  className="flex-1 px-6 py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Confirm Exit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
